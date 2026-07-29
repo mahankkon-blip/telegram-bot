@@ -1,108 +1,96 @@
 import os
-import threading
-from http.server import BaseHTTPRequestHandler, HTTPServer
-
-
-# ساخت سرور برای پاس کردن Health Check رندر
-class HealthCheckHandler(BaseHTTPRequestHandler):
-
-  def do_GET(self):
-    self.send_response(200)
-    self.end_headers()
-    self.wfile.write(b"Bot is active")
-
-
-def start_health_check_server():
-  port = int(os.environ.get("PORT", 10000))
-  server = HTTPServer(("0.0.0.0", port), HealthCheckHandler)
-  server.serve_forever()
-
-
-# اجرای سرور در پس‌زمینه
-threading.Thread(target=start_health_check_server, daemon=True).start()
-
-# --------------------------------------------------
-# ادامه کدهای اصلی ربات تلگرام خودت از این‌جا به بعد
-# --------------------------------------------------
-
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import (
     Application,
-    CommandHandler,
     CallbackQueryHandler,
+    CommandHandler,
     ContextTypes,
 )
 
-TOKEN = "8805155186:AAFzhMYy7FY6srGBRAYRV6s-EKb5TpXSnxw"
-
+# دریافت توکن و آدرس از متغیرهای محیطی یا مقداردهی مستقیم
+TOKEN = os.environ.get("TOKEN", "8805155186:AAFzhMYy7FY6srGBRAYRV6s-EKb5TpXSnxw")
 CHANNEL = "@K_mahan_O"
 
 GAMES = [
-    ("🎮 نوستالژی", "https://play.google.com/store/apps/details?id=fi.twomenandadog.zombiecatchers"),
-    ("🎮 شبیه ساز زندگی", "https://play.google.com/store/apps/details?id=adventure.party.real.life"),
+    (
+        "🎮 نوستالژی",
+        "https://play.google.com/store/apps/details?id=fi.twomenandadog.zombiecatchers",
+    ),
+    (
+        "🎮 شبیه ساز زندگی",
+        "https://play.google.com/store/apps/details?id=adventure.party.real.life",
+    ),
     ("🎮 قایم موشک", "https://share.google/OQ7FHGUGtYxx1xGQ3"),
-    ("🎮 مهماندار هواپیما", "https://store.steampowered.com/app/4534960/Dear_Passengers/"),
+    (
+        "🎮 مهماندار هواپیما",
+        "https://store.steampowered.com/app/4534960/Dear_Passengers/",
+    ),
     ("🎮 چنل یوتیوب", "https://www.youtube.com/@mahanko44"),
 ]
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    keyboard = [
-        [
-            InlineKeyboardButton(
-                "📢 عضویت در کانال",
-                url="https://t.me/K_mahan_O",
-            )
-        ],
-        [
-            InlineKeyboardButton(
-                "✅ عضو شدم",
-                callback_data="check"
-            )
-        ],
-    ]
 
-    await update.message.reply_text(
-        "👋 سلام\n\n"
-        "برای دریافت لینک بازی ابتدا عضو کانال شوید و سپس روی «عضو شدم» بزنید.",
-        reply_markup=InlineKeyboardMarkup(keyboard),
-    )
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+  keyboard = [
+      [InlineKeyboardButton("📢 عضویت در کانال", url="https://t.me/K_mahan_O")],
+      [InlineKeyboardButton("✅ عضو شدم", callback_data="check")],
+  ]
+
+  await update.message.reply_text(
+      "👋 سلام\n\n"
+      "برای دریافت لینک بازی ابتدا عضو کانال شوید و سپس روی «عضو شدم» بزنید.",
+      reply_markup=InlineKeyboardMarkup(keyboard),
+  )
+
 
 async def check(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
+  query = update.callback_query
+  await query.answer()
 
-    user_id = query.from_user.id
+  user_id = query.from_user.id
 
-    try:
-        member = await context.bot.get_chat_member(CHANNEL, user_id)
+  try:
+    member = await context.bot.get_chat_member(CHANNEL, user_id)
 
-        if member.status in ["member", "administrator", "creator"]:
+    if member.status in ["member", "administrator", "creator"]:
+      keyboard = []
+      for name, link in GAMES:
+        keyboard.append([InlineKeyboardButton(name, url=link)])
 
-            keyboard = []
+      await query.message.reply_text(
+          "✅ عضویت شما تایید شد.\n\n🎮 یکی از بازی‌های زیر را انتخاب کنید:",
+          reply_markup=InlineKeyboardMarkup(keyboard),
+      )
+    else:
+      await query.message.reply_text("❌ هنوز عضو کانال نیستید.")
 
-            for name, link in GAMES:
-                keyboard.append([InlineKeyboardButton(name, url=link)])
+  except Exception as e:
+    await query.message.reply_text(
+        "❌ خطا در بررسی عضویت. مطمئن شوید ربات ادمین کانال است."
+    )
 
-            await query.message.reply_text(
-                "✅ عضویت شما تایید شد.\n\n🎮 یکی از بازی‌های زیر را انتخاب کنید:",
-                reply_markup=InlineKeyboardMarkup(keyboard)
-            )
 
-        else:
-            await query.message.reply_text(
-                "❌ هنوز عضو کانال نیستید."
-            )
+def main():
+  app = Application.builder().token(TOKEN).build()
 
-    except Exception as e:
-        await query.message.reply_text(
-            "❌ خطا در بررسی عضویت. مطمئن شوید ربات ادمین کانال است."
-        )
+  app.add_handler(CommandHandler("start", start))
+  app.add_handler(CallbackQueryHandler(check, pattern="check"))
 
-app = Application.builder().token(TOKEN).build()
+  # تنظیمات پورت و آدرس Render
+  PORT = int(os.environ.get("PORT", 10000))
+  RENDER_EXTERNAL_URL = os.environ.get("RENDER_EXTERNAL_URL")
 
-app.add_handler(CommandHandler("start", start))
-app.add_handler(CallbackQueryHandler(check, pattern="check"))
+  if RENDER_EXTERNAL_URL:
+    # اجرای وب‌هوک روی سرور Render
+    app.run_webhook(
+        listen="0.0.0.0",
+        port=PORT,
+        url_path=TOKEN,
+        webhook_url=f"{RENDER_EXTERNAL_URL}/{TOKEN}",
+    )
+  else:
+    # اجرا به صورت Polling (برای تست روی سیستم خودتان)
+    app.run_polling()
 
-print("🤖 Bot is running...")
 
-app.run_polling()
+if __name__ == "__main__":
+  main()
