@@ -1,6 +1,4 @@
 import os
-import threading
-from http.server import BaseHTTPRequestHandler, HTTPServer
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import (
     Application,
@@ -9,35 +7,8 @@ from telegram.ext import (
     ContextTypes,
 )
 
-
-# ۱. ساخت وب‌سرور برای پاس کردن Health Check رندر
-class HealthCheckHandler(BaseHTTPRequestHandler):
-
-  def do_GET(self):
-    self.send_response(200)
-    self.end_headers()
-    self.wfile.write(b"Bot is active!")
-
-  # خاموش کردن لاگ‌های اضافی سرور در ترمینال
-  def log_message(self, format, *args):
-    return
-
-
-def run_health_check_server():
-  port = int(os.environ.get("PORT", 10000))
-  server = HTTPServer(("0.0.0.0", port), HealthCheckHandler)
-  server.serve_forever()
-
-
-# اجرای سرور در یک ترد (Thread) جداگانه
-threading.Thread(target=run_health_check_server, daemon=True).start()
-
-# --------------------------------------------------
-# ۲. تنظیمات و کدهای اصلی ربات تلگرام
-# --------------------------------------------------
-
-TOKEN = os.environ.get("TOKEN", "8805155186:AAFtskJRMtTSD1MA67jSvGtm3RSUrotIsBE")  # توکن اصلی
-TOKEN = os.environ.get("TOKEN")
+# توکن و کانال
+TOKEN = os.environ.get("TOKEN", "8805155186:AAFtskJRMtTSD1MA67jSvGtm3RSUrotIsBE")
 CHANNEL = "@K_mahan_O"
 
 GAMES = [
@@ -63,7 +34,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
       [InlineKeyboardButton("📢 عضویت در کانال", url="https://t.me/K_mahan_O")],
       [InlineKeyboardButton("✅ عضو شدم", callback_data="check")],
   ]
-
   await update.message.reply_text(
       "👋 سلام\n\n"
       "برای دریافت لینک بازی ابتدا عضو کانال شوید و سپس روی «عضو شدم» بزنید.",
@@ -74,38 +44,45 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def check(update: Update, context: ContextTypes.DEFAULT_TYPE):
   query = update.callback_query
   await query.answer()
-
   user_id = query.from_user.id
 
   try:
     member = await context.bot.get_chat_member(CHANNEL, user_id)
-
     if member.status in ["member", "administrator", "creator"]:
-      keyboard = []
-      for name, link in GAMES:
-        keyboard.append([InlineKeyboardButton(name, url=link)])
-
+      keyboard = [
+          [InlineKeyboardButton(name, url=link)] for name, link in GAMES
+      ]
       await query.message.reply_text(
           "✅ عضویت شما تایید شد.\n\n🎮 یکی از بازی‌های زیر را انتخاب کنید:",
           reply_markup=InlineKeyboardMarkup(keyboard),
       )
     else:
       await query.message.reply_text("❌ هنوز عضو کانال نیستید.")
-
-  except Exception as e:
+  except Exception:
     await query.message.reply_text(
         "❌ خطا در بررسی عضویت. مطمئن شوید ربات ادمین کانال است."
     )
 
 
-# اجرای برنامه اصلی
-if __name__ == "__main__":
+def main():
   app = Application.builder().token(TOKEN).build()
-
   app.add_handler(CommandHandler("start", start))
   app.add_handler(CallbackQueryHandler(check, pattern="check"))
 
-  print("🤖 Bot is running...")
+  PORT = int(os.environ.get("PORT", 10000))
+  RENDER_URL = os.environ.get("RENDER_EXTERNAL_URL")
 
-  # drop_pending_updates=True باعث می‌شود آپدیت‌ها و درخواست‌های معلق قبلی پاک شوند و خطای Conflict ندهد
-  app.run_polling(drop_pending_updates=True)
+  # سوئیچ به حالت Webhook برای اجرا در Render
+  if RENDER_URL:
+    app.run_webhook(
+        listen="0.0.0.0",
+        port=PORT,
+        url_path=TOKEN,
+        webhook_url=f"{RENDER_URL}/{TOKEN}",
+    )
+  else:
+    app.run_polling()
+
+
+if __name__ == "__main__":
+  main()
