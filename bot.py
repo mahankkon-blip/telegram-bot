@@ -1,4 +1,6 @@
 import os
+import threading
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import (
     Application,
@@ -7,8 +9,34 @@ from telegram.ext import (
     ContextTypes,
 )
 
-# دریافت توکن و آدرس از متغیرهای محیطی یا مقداردهی مستقیم
-TOKEN = os.environ.get("TOKEN", "8805155186:AAFzhMYy7FY6srGBRAYRV6s-EKb5TpXSnxw")
+
+# ۱. ساخت وب‌سرور برای پاس کردن Health Check رندر
+class HealthCheckHandler(BaseHTTPRequestHandler):
+
+  def do_GET(self):
+    self.send_response(200)
+    self.end_headers()
+    self.wfile.write(b"Bot is active!")
+
+  # خاموش کردن لاگ‌های اضافی سرور در ترمینال
+  def log_message(self, format, *args):
+    return
+
+
+def run_health_check_server():
+  port = int(os.environ.get("PORT", 10000))
+  server = HTTPServer(("0.0.0.0", port), HealthCheckHandler)
+  server.serve_forever()
+
+
+# اجرای سرور در یک ترد (Thread) جداگانه
+threading.Thread(target=run_health_check_server, daemon=True).start()
+
+# --------------------------------------------------
+# ۲. تنظیمات و کدهای اصلی ربات تلگرام
+# --------------------------------------------------
+
+TOKEN = os.environ.get("TOKEN", "8805155186:AAFtskJRMtTSD1MA67jSvGtm3RSUrotIsBE")  # توکن اصلی
 CHANNEL = "@K_mahan_O"
 
 GAMES = [
@@ -69,28 +97,14 @@ async def check(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
-def main():
+# اجرای برنامه اصلی
+if __name__ == "__main__":
   app = Application.builder().token(TOKEN).build()
 
   app.add_handler(CommandHandler("start", start))
   app.add_handler(CallbackQueryHandler(check, pattern="check"))
 
-  # تنظیمات پورت و آدرس Render
-  PORT = int(os.environ.get("PORT", 10000))
-  RENDER_EXTERNAL_URL = os.environ.get("RENDER_EXTERNAL_URL")
+  print("🤖 Bot is running...")
 
-  if RENDER_EXTERNAL_URL:
-    # اجرای وب‌هوک روی سرور Render
-    app.run_webhook(
-        listen="0.0.0.0",
-        port=PORT,
-        url_path=TOKEN,
-        webhook_url=f"{RENDER_EXTERNAL_URL}/{TOKEN}",
-    )
-  else:
-    # اجرا به صورت Polling (برای تست روی سیستم خودتان)
-    app.run_polling()
-
-
-if __name__ == "__main__":
-  main()
+  # drop_pending_updates=True باعث می‌شود آپدیت‌ها و درخواست‌های معلق قبلی پاک شوند و خطای Conflict ندهد
+  app.run_polling(drop_pending_updates=True)
