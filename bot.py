@@ -1,3 +1,30 @@
+import os
+import threading
+from http.server import BaseHTTPRequestHandler, HTTPServer
+
+
+# ساخت سرور برای پاس کردن Health Check رندر
+class HealthCheckHandler(BaseHTTPRequestHandler):
+
+  def do_GET(self):
+    self.send_response(200)
+    self.end_headers()
+    self.wfile.write(b"Bot is active")
+
+
+def start_health_check_server():
+  port = int(os.environ.get("PORT", 10000))
+  server = HTTPServer(("0.0.0.0", port), HealthCheckHandler)
+  server.serve_forever()
+
+
+# اجرای سرور در پس‌زمینه
+threading.Thread(target=start_health_check_server, daemon=True).start()
+
+# --------------------------------------------------
+# ادامه کدهای اصلی ربات تلگرام خودت از این‌جا به بعد
+# --------------------------------------------------
+
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     Application,
