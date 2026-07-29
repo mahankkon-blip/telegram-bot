@@ -77,3 +77,10 @@ app.add_handler(CallbackQueryHandler(check, pattern="check"))
 print("🤖 Bot is running...")
 
 app.run_polling()
+
+app.add_handler(CommandHandler("start", start))
+app.add_handler(CallbackQueryHandler(check, pattern="check"))
+
+print("🤖 Bot is running...")
+
+app.run_polling()
