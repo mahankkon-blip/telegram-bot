@@ -37,6 +37,7 @@ threading.Thread(target=run_health_check_server, daemon=True).start()
 # --------------------------------------------------
 
 TOKEN = os.environ.get("TOKEN", "8805155186:AAFtskJRMtTSD1MA67jSvGtm3RSUrotIsBE")  # توکن اصلی
+TOKEN = os.environ.get("TOKEN")
 CHANNEL = "@K_mahan_O"
 
 GAMES = [
