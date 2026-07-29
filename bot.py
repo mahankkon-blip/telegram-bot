@@ -6,7 +6,7 @@ from telegram.ext import (
     ContextTypes,
 )
 
-TOKEN = "8805155186:AAEcBGMDf8Tb2FEptlNLbdB6U5Bkk81tCy8"
+TOKEN = "8805155186:AAFZFVzZa70_3IYxpFvakQFpPm4pW3DnNF0"
 
 CHANNEL = "@K_mahan_O"
 
@@ -39,7 +39,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "برای دریافت لینک بازی ابتدا عضو کانال شوید و سپس روی «عضو شدم» بزنید.",
         reply_markup=InlineKeyboardMarkup(keyboard),
     )
-  async def check(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+async def check(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
 
@@ -69,14 +70,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.message.reply_text(
             "❌ خطا در بررسی عضویت. مطمئن شوید ربات ادمین کانال است."
         )
-      app = Application.builder().token(TOKEN).build()
 
-app.add_handler(CommandHandler("start", start))
-app.add_handler(CallbackQueryHandler(check, pattern="check"))
-
-print("🤖 Bot is running...")
-
-app.run_polling()
+app = Application.builder().token(TOKEN).build()
 
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CallbackQueryHandler(check, pattern="check"))
