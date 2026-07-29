@@ -6,7 +6,7 @@ from telegram.ext import (
     ContextTypes,
 )
 
-TOKEN = "8805155186:AAFZFVzZa70_3IYxpFvakQFpPm4pW3DnNF0"
+TOKEN = "8805155186:AAGLpp8jqVdgowmGdNLFN6FKGqeIqEuQoXo"
 
 CHANNEL = "@K_mahan_O"
 
