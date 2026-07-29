@@ -33,7 +33,7 @@ from telegram.ext import (
     ContextTypes,
 )
 
-TOKEN = "8805155186:AAGLpp8jqVdgowmGdNLFN6FKGqeIqEuQoXo"
+TOKEN = "8805155186:AAFzhMYy7FY6srGBRAYRV6s-EKb5TpXSnxw"
 
 CHANNEL = "@K_mahan_O"
 
