@@ -13,19 +13,19 @@ CHANNEL = "@K_mahan_O"
 
 GAMES = [
     (
-        "🎮 نوستالژی",
-        "https://play.google.com/store/apps/details?id=fi.twomenandadog.zombiecatchers",
+        "🧟‍♂️ زامبی",
+        "https://www.dl.farsroid.com/game/Into-the-Dead-2-1.86.1(www.Farsroid.com).xapk",
     ),
     (
-        "🎮 شبیه ساز زندگی",
+        "🏋‍♂️ شبیه ساز زندگی",
         "https://play.google.com/store/apps/details?id=adventure.party.real.life",
     ),
-    ("🎮 قایم موشک", "https://share.google/OQ7FHGUGtYxx1xGQ3"),
+    ("🙈 قایم موشک", "https://share.google/OQ7FHGUGtYxx1xGQ3"),
     (
-        "🎮 مهماندار هواپیما",
+        "🛩 مهماندار هواپیما",
         "https://store.steampowered.com/app/4534960/Dear_Passengers/",
     ),
-    ("🎮 چنل یوتیوب", "https://www.youtube.com/@mahanko44"),
+    ("❤️ چنل یوتیوب", "https://www.youtube.com/@mahanko44"),
 ]
 
 
