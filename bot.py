@@ -8,7 +8,7 @@ from telegram.ext import (
 )
 
 # توکن و کانال
-TOKEN = os.environ.get("TOKEN", "8805155186:AAGX9pk70dt6q1v6pTH7-gEI8Hf0ixFM4Bo")
+TOKEN = os.environ.get("TOKEN", "8841114490:AAEqfgYP2LXwWWL3HEEoQe5J3urRac85ubY")
 CHANNEL = "@K_mahan_O"
 
 GAMES = [
